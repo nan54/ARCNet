@@ -10,7 +10,7 @@ ARCNet 是一种面向多任务密集预测（语义分割 + 单目深度估计�
 
 1. 视觉基础模型与多尺度适配器 (`dinov3_adapter.py`)：采用预训练的 DINOv3-ViT-Base 作为特征提取主干，结合轻量级 `SimpleViTAdapter` 构建 1/4, 1/8, 1/16, 1/32四级多尺度特征金字塔。
 2. 非对称任务路由器 (`multi_task_routing.py` - ATR)：摒弃复杂的动态退火与手工正则化惩罚，采用固定锐化温度（tau = 0.5）与非对称通道保底下限（alpha = [0.3, 0.3, 0.2, 0.1]），保护梯度稀疏任务的表征容量并抑制任务间恶性竞争。
-3. 形变对齐共享解码器与跨任务注意力 (`routed_resenet.py` - DCNv2 & CTA)**：在共享 MLP 解码器中引入可变形卷积（DCNv2）消除多尺度特征边缘错位，并通过通道-空间双门控跨任务注意力（CTA）在解耦特征上恢复受控的双向互补协同。
+3. 形变对齐共享解码器与跨任务注意力 (`routed_resenet.py` - DCNv2 & CTA)：在共享 MLP 解码器中引入可变形卷积（DCNv2）消除多尺度特征边缘错位，并通过通道-空间双门控跨任务注意力（CTA）在解耦特征上恢复受控的双向互补协同。
 4. 任务专属预测头 (`routed_resenet.py`)：包含基于度量学习与类别原型的语义锚点查询头（`SemanticAnchoredQueryHead`）以及集成 ASPP 与非负物理约束的增强深度头（`EnhancedDepthHead`）。
 
 ---
@@ -113,8 +113,7 @@ python train_resent.py
 ### 3.3 训练过程输出
 运行 `train_resent.py` 后，程序会自动执行以下操作并保存在 `Config.SAVE_DIR`（默认 `./runs/run_sota_from_scratch`）：
 1. **基准性能测试**：在训练开始前自动统计总参数量、可训练参数量、计算量（FLOPs）及纯净推理速度（FPS）。
-2. **EMA 影子模型验证**：每个 Epoch 结束后，使用指数移动平均（ModelEMA）权重结合水平翻转测试时增强（TTA）与长尾频率校准（`predict_all`）在验证集上评估指标。
-3. **权重与日志保存**：
+2. **权重与日志保存**：
    - `best_model.pth`：验证集上综合表现最佳的 EMA 模型权重。
    - `latest_checkpoint.pth`：最新一轮的完整断点（含主模型、EMA 模型、优化器及混合精度 Scaler 状态）。
    - `training_curves.png`：训练损失曲线及验证集 mIoU / RMSE 变化曲线图。
@@ -186,15 +185,5 @@ print(f"分割预测尺寸: {pred_seg_mask.shape}, 深度预测范围: {pred_dep
 
 ---
 
-## 6. 引用 (Citation)
 
-如果本项目的代码或方法对你的研究有所帮助，欢迎引用我们的论文：
 
-```bibtex
-@article{xiong2026arcnet,
-  title={An Asymmetric Routing and Cross-Task Collaboration Network for Multi-Task Dense Prediction},
-  author={Xiong, ZhengNan and Miao, Jun and Xie, ShouPing},
-  journal={Nanchang Hangkong University},
-  year={2026}
-}
-```
