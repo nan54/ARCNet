@@ -1,21 +1,21 @@
 # ARCNet: An Asymmetric Routing and Cross-Task Collaboration Network for Multi-Task Dense Prediction
 
-本仓库是论文 **"An Asymmetric Routing and Cross-Task Collaboration Network for Multi-Task Dense Prediction"** 的官方 PyTorch 实现。
+本仓库是论文 "An Asymmetric Routing and Cross-Task Collaboration Network for Multi-Task Dense Prediction"的官方 PyTorch 实现。
 
-**ARCNet** 是一种面向多任务密集预测（语义分割 + 单目深度估计）的端到端轻量级网络框架，遵循**“先特征解耦、后跨任务协同（Decoupling Prior to Collaboration）”**的设计范式。模型在仅使用 $91.73\text{M}$ 参数量和 $261.68\text{G}$ FLOPs 的条件下，在标准室内场景数据集 **NYUD-v2**（mIoU $58.59\%$，RMSE $0.4456\text{m}$）与透明物体数据集 **Syn-TODD**（mIoU $94.98\%$，RMSE $0.143\text{m}$）上均取得了优异的联合预测性能。
-
----
-
-## 核心特性 (Key Features)
-
-1. **视觉基础模型与多尺度适配器 (`dinov3_adapter.py`)**：采用预训练的 **DINOv3-ViT-Base** 作为特征提取主干，结合轻量级 `SimpleViTAdapter` 构建 $\{1/4, 1/8, 1/16, 1/32\}$ 四级多尺度特征金字塔。
-2. **非对称任务路由器 (`multi_task_routing.py` - ATR)**：摒弃复杂的动态退火与手工正则化惩罚，采用固定锐化温度（$\tau = 0.5$）与非对称通道保底下限（$\alpha = [0.3, 0.3, 0.2, 0.1]$），保护梯度稀疏任务的表征容量并抑制任务间恶性竞争。
-3. **形变对齐共享解码器与跨任务注意力 (`routed_resenet.py` - DCNv2 & CTA)**：在共享 MLP 解码器中引入可变形卷积（DCNv2）消除多尺度特征边缘错位，并通过通道-空间双门控跨任务注意力（CTA）在解耦特征上恢复受控的双向互补协同。
-4. **任务专属预测头 (`routed_resenet.py`)**：包含基于度量学习与类别原型的语义锚点查询头（`SemanticAnchoredQueryHead`）以及集成 ASPP 与非负物理约束的增强深度头（`EnhancedDepthHead`）。
+ARCNet 是一种面向多任务密集预测（语义分割 + 单目深度估计）的端到端轻量级网络框架，遵循“先特征解耦、后跨任务协同（Decoupling Prior to Collaboration）”的设计范式。模型在仅使用 91.73 M 参数量和 261.68 G FLOPs 的条件下，在标准室内场景数据集 NYUD-v2（mIoU 58.59%，RMSE 0.4456 m）与透明物体数据集 **Syn-TODD**（mIoU $94.98\%$，RMSE $0.143\text{m}$）上均取得了优异的联合预测性能。
 
 ---
 
-## 推荐项目目录结构 (Directory Structure)
+核心特性 (Key Features)
+
+1. 视觉基础模型与多尺度适配器 (`dinov3_adapter.py`)：采用预训练的 DINOv3-ViT-Base 作为特征提取主干，结合轻量级 `SimpleViTAdapter` 构建 1/4, 1/8, 1/16, 1/32四级多尺度特征金字塔。
+2. 非对称任务路由器 (`multi_task_routing.py` - ATR)：摒弃复杂的动态退火与手工正则化惩罚，采用固定锐化温度（tau = 0.5）与非对称通道保底下限（alpha = [0.3, 0.3, 0.2, 0.1]），保护梯度稀疏任务的表征容量并抑制任务间恶性竞争。
+3. 形变对齐共享解码器与跨任务注意力 (`routed_resenet.py` - DCNv2 & CTA)**：在共享 MLP 解码器中引入可变形卷积（DCNv2）消除多尺度特征边缘错位，并通过通道-空间双门控跨任务注意力（CTA）在解耦特征上恢复受控的双向互补协同。
+4. 任务专属预测头 (`routed_resenet.py`)：包含基于度量学习与类别原型的语义锚点查询头（`SemanticAnchoredQueryHead`）以及集成 ASPP 与非负物理约束的增强深度头（`EnhancedDepthHead`）。
+
+---
+
+推荐项目目录结构 (Directory Structure)
 
 在上传或克隆本项目时，建议保持如下目录结构：
 
@@ -49,7 +49,7 @@ ARCNet/
 
 ## 1. 环境安装 (Environment Setup)
 
-本项目在 **Ubuntu 18.04**、**Python 3.9**、**PyTorch 2.6.0** 以及单张 **NVIDIA GeForce RTX 3090 Ti GPU** 环境下开发与测试。
+本项目在 Ubuntu 18.04、Python 3.9、PyTorch 2.6.0*以及单张 NVIDIA GeForce RTX 3090 Ti GPU 环境下开发与测试。
 
 ### 1.1 创建虚拟环境
 ```bash
@@ -72,15 +72,14 @@ pip install -r requirements.txt
    ```bash
    mkdir -p ./pretrain
    ```
-2. 下载 **DINOv3-ViT-Base** 预训练权重 `dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth`，并将其放置在 `./pretrain/` 目录下（对应 `routed_resenet.py` 中的 `dinov3_weight` 路径）。
-3. *(可选)* 若使用 CLIP 语义先验初始化分割查询向量，可将 `nyu40_clip_queries.pt` 放置在项目根目录下。
+2. 下载 DINOv3-ViT-Base预训练权重 `dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth`，并将其放置在 `./pretrain/` 目录下（对应 `routed_resenet.py` 中的 `dinov3_weight` 路径）。
 
-### 2.2 准备 NYUD-v2 数据集
-本项目采用 CSV 索引方式精确读取数据，包含 $795$ 张训练样本和 $654$ 张测试样本：
+ 2.2 准备 NYUD-v2 数据集
+本项目采用 CSV 索引方式精确读取数据，包含 795 张训练样本和 654 张测试样本：
 1. 数据集目录下需包含 `nyu2_train.csv` 和 `nyu2_test.csv` 两个文件，每个 CSV 文件需包含以下三列相对路径表头：
    - `rgb`：RGB 彩色图像路径
    - `depth`：16-bit 单通道深度图路径（单位为毫米，读取时会自动除以 $1000.0$ 转换为米）
-   - `label`：语义分割标签路径（采用 `1-based` 编码：像素值 $0$ 为无效黑边，将在训练时自动重映射为忽略标签 $255$；有效物体类别 $1 \sim 40$ 将自动映射为 $0 \sim 39$）
+   - `label`：语义分割标签路径（采用 `1-based` 编码：像素值 0 为无效黑边，将在训练时自动重映射为忽略标签 255；有效物体类别 1 - 40 将自动映射为 0 - 39）
 2. 打开 `config.py`，将 `DATA_ROOT` 修改为你本地的数据集路径：
    ```python
    class Config:
@@ -94,15 +93,16 @@ pip install -r requirements.txt
 
 ### 3.1 超参数说明
 论文实验部分（Section 4.3.1）的默认训练配置已在 `config.py` 和 `train_resent.py` 中预设好：
-- **输入裁剪尺寸 (`CROP_SIZE`)**：$480 \times 640$
-- **批大小 (`BATCH_SIZE`)**：单卡 Batch Size 为 $8$，梯度累积步数 `ACCUMULATION_STEPS = 2`（等效 Batch Size 为 $16$）
-- **总训练轮数 (`TOTAL_EPOCHS`)**：$100$ Epochs
+- **输入裁剪尺寸 (`CROP_SIZE`)**：480 x 640
+- **批大小 (`BATCH_SIZE`)**：单卡 Batch Size 为 8，梯度累积步数 `ACCUMULATION_STEPS = 2`（等效 Batch Size 为 16）
+- **总训练轮数 (`TOTAL_EPOCHS`)**：100 Epochs
 - **分层学习率 (`AdamW`)**：
-  - DINOv3 主干网络：$5 \times 10^{-6}$（Weight Decay = $0.05$）
-  - 共享解码器：$5 \times 10^{-5}$（Weight Decay = $0.05$）
-  - 语义与深度预测头：$1 \times 10^{-4}$（Weight Decay = $0.05$）
-  - 路由器门控参数：$5 \times 10^{-3}$（Weight Decay = $0.0$）
-- **学习率调度策略**：前 $8$ 个 Epoch 采用线性预热（Linear Warm-up），随后采用多项式衰减（PolyLR，幂指数为 $0.9$，最小学习率为 $1 \times 10^{-7}$）。
+  - **分层学习率设置（AdamW）**：
+  - DINOv3 主干网络：`5e-6`（Weight Decay = `0.05`）
+  - 共享解码器：`5e-5`（Weight Decay = `0.05`）
+  - 语义与深度预测头：`1e-4`（Weight Decay = `0.05`）
+  - 路由器门控参数：`5e-3`（Weight Decay = `0.0`）
+- **学习率调度策略**：前 `8` 个 Epoch 采用线性预热（Linear Warm-up），随后采用多项式衰减（PolyLR，幂指数为 `0.9`，最小学习率为 `1e-7`）。
 
 ### 3.2 启动训练
 在项目根目录下运行以下命令即可启动端到端训练与验证：
